@@ -920,6 +920,22 @@ class Comment(Base):
         return "Comment<{}/{}/{} for {}>".format(
             self.assignment.name, self.notebook.name, self.name, self.student.id)
 
+class Organization(Base):
+    """Table to store the organizations"""
+
+    __tablename__ = "organization"
+
+     #: Unique id of the organization (automatically generated)
+    id = Column(String(32), primary_key=True, default=new_uuid)
+
+    #: Unique human-readable name for the organization"
+    name = Column(String(128), unique=True, nullable=False)
+
+    courses = relationship("Course", back_populates="organization")
+
+    def __repr__(self):
+        return "Organization<{}>".format(self.id)
+
 class Course(Base):
     """Table to store the courses"""
 
@@ -927,6 +943,8 @@ class Course(Base):
 
     id = Column(String(128), unique=True, primary_key=True, nullable=False)
     assignments = relationship("Assignment", back_populates="course")
+    organization_id = Column(String(32), ForeignKey('organization.id'))
+    organization = relationship("Organization", back_populates="courses")
 
     def __repr__(self):
         return "Course<{}>".format(self.id)
