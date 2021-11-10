@@ -229,9 +229,9 @@ class StudentSubmissionCollectionHandler(BaseApiHandler):
         self.write(json.dumps(submissions))
 
 class AddOrganizationHandler(BaseApiHandler):
-    # @web.authenticated
-    # @check_xsrf
-    # @check_notebook_dir
+    @web.authenticated
+    @check_xsrf
+    @check_notebook_dir
     def post(self):
         data = self.get_json_body()
         try:
@@ -241,9 +241,9 @@ class AddOrganizationHandler(BaseApiHandler):
         self.write(json.dumps(self.api.get_organization(organization.id)))
 
 class GetOrganizationHandler(BaseApiHandler):
-    # @web.authenticated
-    # @check_xsrf
-    # @check_notebook_dir
+    @web.authenticated
+    @check_xsrf
+    @check_notebook_dir
     def get(self, organization_id):
         try:
             organization = self.api.get_organization(organization_id)
@@ -252,9 +252,9 @@ class GetOrganizationHandler(BaseApiHandler):
         self.write(json.dumps(organization))
 
 class DeleteOrganizationHandler(BaseApiHandler):
-    # @web.authenticated
-    # @check_xsrf
-    # @check_notebook_dir
+    @web.authenticated
+    @check_xsrf
+    @check_notebook_dir
     def delete(self, organization_id):
         try:
             self.gradebook.remove_organization(organization_id)
@@ -264,9 +264,9 @@ class DeleteOrganizationHandler(BaseApiHandler):
         self.write(json.dumps(organization))
 
 class UpdateOrganizationHandler(BaseApiHandler):
-    # @web.authenticated
-    # @check_xsrf
-    # @check_notebook_dir
+    @web.authenticated
+    @check_xsrf
+    @check_notebook_dir
     def put(self, organization_id):
         data = self.get_json_body()
         try:
