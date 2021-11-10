@@ -933,6 +933,20 @@ class Organization(Base):
 
     courses = relationship("Course", back_populates="organization")
 
+    def __init__(self, name, **kwargs):
+        self.name = name
+
+    def to_dict(self):
+        """Convert the organization object to a JSON-friendly dictionary
+        representation.
+
+        """
+        return {
+            "id": self.id,
+            "name": self.name,
+            "courses": self.courses,
+        }
+
     def __repr__(self):
         return "Organization<{}>".format(self.id)
 
@@ -1412,6 +1426,106 @@ class Gradebook(object):
             self.db.rollback()
             raise InvalidEntry(*e.args)
         return course
+
+    #### Organization
+
+    def add_organization(self, name: str) -> Organization:
+        """Add a new organization to the database.
+
+        Parameters
+        ----------
+         name : string
+            The unique name of the organization
+
+        Returns
+        -------
+        organization
+
+        """
+
+        organization = Organization(name)
+        self.db.add(organization)
+        try:
+            self.db.commit()
+        except (IntegrityError, FlushError, StatementError) as e:
+            app_log.exception("Rolling back session due to database error %s" % e)
+            self.db.rollback()
+            raise InvalidEntry(*e.args)
+
+        return organization
+
+    def update_organization(self, organization_id: str, name: str) -> Organization:
+        """Add a new organization to the database.
+
+        Parameters
+        ----------
+        organization_id : string
+            The unique id of the organization
+
+        name: string
+            The name of the organization
+
+        Returns
+        -------
+        organization
+
+        """
+        organization = self.db.query(Organization)\
+                .filter_by(id=organization_id)\
+                .update(dict(name=name))
+
+        try:
+            self.db.commit()
+        except (IntegrityError, FlushError, StatementError) as e:
+            app_log.exception("Rolling back session due to database error %s" % e)
+            self.db.rollback()
+            raise InvalidEntry(*e.args)
+
+        return organization
+
+
+    def find_organization(self, organization_id: str) -> Organization:
+        """Find a organization.
+
+        Parameters
+        ----------
+        organization_id:
+            The unique id of the organization
+
+        Returns
+        -------
+        organization
+
+        """
+        try:
+            organization = self.db.query(Organization)\
+                .filter(Organization.id == organization_id)\
+                .one()
+        except NoResultFound:
+            raise MissingEntry("No such organization: {}".format(organization_id))
+
+        return organization
+
+    def remove_organization(self, organization_id: str) -> Organization:
+        """Deletes an existing organization from the database.
+
+        Parameters
+        ----------
+        organization_id : string
+            The unique id of the organization
+
+        """
+
+        organization = self.find_organization(organization_id)
+        self.db.delete(organization)
+        try:
+            self.db.commit()
+        except (IntegrityError, FlushError, StatementError) as e:
+            app_log.exception("Rolling back session due to database error %s" % e)
+            self.db.rollback()
+            raise InvalidEntry(*e.args)
+
+        return organization
 
     #### Students
 
@@ -2039,7 +2153,7 @@ class Gradebook(object):
 
         return solution_cell
 
-# Task cells
+    # Task cells
 
     def add_task_cell(self, name: str, notebook: str, assignment: str, **kwargs: dict) -> TaskCell:
         """Add a new task cell to an existing notebook of an existing

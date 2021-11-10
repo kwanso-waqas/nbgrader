@@ -2,7 +2,6 @@ import json
 import os
 
 from tornado import web
-
 from .base import BaseApiHandler, check_xsrf, check_notebook_dir
 from ...api import MissingEntry
 
@@ -229,6 +228,54 @@ class StudentSubmissionCollectionHandler(BaseApiHandler):
         submissions = self.api.get_student_submissions(student_id)
         self.write(json.dumps(submissions))
 
+class AddOrganizationHandler(BaseApiHandler):
+    # @web.authenticated
+    # @check_xsrf
+    # @check_notebook_dir
+    def post(self):
+        data = self.get_json_body()
+        try:
+            organization = self.gradebook.add_organization(data.get("name", None))
+        except Exception as e:
+            raise web.HTTPError(400, f"{e}")
+        self.write(json.dumps(self.api.get_organization(organization.id)))
+
+class GetOrganizationHandler(BaseApiHandler):
+    # @web.authenticated
+    # @check_xsrf
+    # @check_notebook_dir
+    def get(self, organization_id):
+        try:
+            organization = self.api.get_organization(organization_id)
+        except Exception as e:
+            raise web.HTTPError(400, f"{e}")
+        self.write(json.dumps(organization))
+
+class DeleteOrganizationHandler(BaseApiHandler):
+    # @web.authenticated
+    # @check_xsrf
+    # @check_notebook_dir
+    def delete(self, organization_id):
+        try:
+            self.gradebook.remove_organization(organization_id)
+            organization = self.api.get_organization(organization_id)
+        except Exception as e:
+            raise web.HTTPError(400, f"{e}")
+        self.write(json.dumps(organization))
+
+class UpdateOrganizationHandler(BaseApiHandler):
+    # @web.authenticated
+    # @check_xsrf
+    # @check_notebook_dir
+    def put(self, organization_id):
+        data = self.get_json_body()
+        try:
+            self.gradebook.update_organization(organization_id, data.get("name", None))
+            organization = self.api.get_organization(organization_id)
+        except Exception as e:
+            raise web.HTTPError(400, f"{e}")
+        self.write(json.dumps(organization))
+
 
 class StudentNotebookSubmissionCollectionHandler(BaseApiHandler):
     @web.authenticated
@@ -339,6 +386,11 @@ default_handlers = [
 
     (r"/formgrader/api/comments", CommentCollectionHandler),
     (r"/formgrader/api/comment/([^/]+)", CommentHandler),
+
+    (r"/formgrader/api/organization", AddOrganizationHandler),
+    (r"/formgrader/api/organization/([^/]+)", GetOrganizationHandler),
+    (r"/formgrader/api/organization/update/([^/]+)", UpdateOrganizationHandler),
+    (r"/formgrader/api/organization/delete/([^/]+)", DeleteOrganizationHandler),
 
     (r"/formgrader/api/students", StudentCollectionHandler),
     (r"/formgrader/api/student/([^/]+)", StudentHandler),

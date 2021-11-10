@@ -728,6 +728,31 @@ class NbGraderAPI(LoggingConfigurable):
         submissions.sort(key=lambda x: x["id"])
         return submissions
 
+    def get_organization(self, organization_id):
+        """Get a dictionary containing information about the given organization.
+
+        Arguments
+        ---------
+        organization_id: string
+            The unique id of the organization
+
+        Returns
+        -------
+        organization: dictionary
+            A dictionary containing information about the organization, or None if
+            the organization does not exist
+
+        """
+
+        try:
+            with self.gradebook as gb:
+                organization = gb.find_organization(organization_id).to_dict()
+
+        except MissingEntry:
+            raise MissingEntry("No such organization: {}".format(organization_id))
+
+        return organization
+
     def get_student(self, student_id, submitted=None):
         """Get a dictionary containing information about the given student.
 
